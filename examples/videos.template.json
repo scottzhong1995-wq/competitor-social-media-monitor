@@ -1,0 +1,26 @@
+[
+  {
+    "platform": "YouTube",
+    "url": "https://www.youtube.com/watch?v=REPLACE_ID1",
+    "title": "替换为真实 Yozma 或 Tuttio 视频原标题",
+    "description": "替换为真实公开描述；不是演示监控结果",
+    "creator": "替换为真实账号",
+    "creator_url": "",
+    "published_at": "2026-10-20T12:00:00Z",
+    "observed_at": "2026-10-21T12:00:00Z",
+    "source": "填写数据来自的原视频链接或导出来源",
+    "format": "unknown",
+    "market": "unknown",
+    "language": "unknown",
+    "cooperation": "普通提及",
+    "evidence": "",
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "followers": null,
+    "creator_type": "",
+    "contact": "",
+    "contact_source": "",
+    "content_group": ""
+  }
+]

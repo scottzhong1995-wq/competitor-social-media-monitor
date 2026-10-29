@@ -1,0 +1,26 @@
+{
+  "market": "US",
+  "language": "en",
+  "history_days": 90,
+  "report_timezone": "America/Los_Angeles",
+  "brands": [
+    {
+      "name": "Yozma",
+      "website": "https://yozmasport.com/",
+      "models": [
+        {"name": "IN-10 Pro", "aliases": ["in-10 pro", "in 10 pro", "in10 pro", "in10pro"], "url": "https://yozmasport.com/products/in-10-pro"},
+        {"name": "IN-10", "aliases": ["in-10", "in 10", "in10"], "url": "https://yozmasport.com/products/in-10"}
+      ]
+    },
+    {
+      "name": "Tuttio",
+      "website": "https://tuttiosport.com/",
+      "models": [
+        {"name": "Soleil01 GB Pro", "aliases": ["soleil01 gb pro", "soleil 01 gb pro", "soleil01-gb-pro", "gb pro"], "url": "https://tuttiosport.com/products/tuttio-soleil01-gb-pro-electric-dirt-bike"},
+        {"name": "Soleil01", "aliases": ["soleil01", "soleil 01", "soleil-01"], "url": "https://tuttiosport.com/products/tuttio-soleil01-electric-bike"}
+      ]
+    }
+  ],
+  "youtube_queries": ["Yozma", "Yozma IN-10", "Yozma IN-10 Pro", "Tuttio", "Tuttio Soleil01", "Tuttio Soleil01 GB Pro"],
+  "viral_candidate_views": {"long": 50000, "short": 100000, "unknown": 100000}
+}
