@@ -99,7 +99,8 @@ def classify(title, description):
     ] if re.search(pattern, text)] or ['待分类']
     keywords = [w for w in re.findall(r'[a-z0-9]+(?:-[a-z0-9]+)*', title.lower())
                 if w not in {'the', 'a', 'an', 'and', 'or', 'of', 'to', 'in', 'is', 'it', 'for', 'my', 'this', 'on', 'with'}]
-    clues = []
+    from .commercial import signals
+    clues = [x['kind']+'：'+x['value']+'；'+x['context'] for x in signals(title+'\n'+description)]
     for pattern, label in [
         (r'sponsored|paid partnership|paid promotion|#ad\b', '赞助披露线索'),
         (r'sent me|sent us|gifted|provided.{0,30}(bike|review)', '赠品/送测线索'),
@@ -173,10 +174,13 @@ def import_videos(db, items):
                 raise ValueError('标题或描述需匹配已配置品牌/车型，或显式标记 baseline_only 基线样本')
             directions, keywords, clues = classify(title, description)
             requested_status = {'已确认合作':'明确合作','疑似合作':'线索待核实','普通品牌提及':'普通提及'}.get(item.get('cooperation'),item.get('cooperation'))
-            cooperation = requested_status or ('线索待核实' if clues else '普通提及')
+            from .commercial import signals
+            priority = signals(title+'\n'+description)
+            cooperation = requested_status or ('明确合作' if priority else '线索待核实')
             if cooperation not in {'明确合作', '线索待核实', '普通提及', '排除', '品牌官方内容'}:
                 raise ValueError('未知的合作状态')
-            evidence = str(item.get('evidence', '\n'.join(clues)))
+            evidence = str(item.get('evidence', '\n'.join(clues) if priority else '未发现折扣码或联盟链接，待人工审核。'+('\n'+'\n'.join(clues) if clues else '')))
+            origin = 'manual_import' if requested_status else 'auto'
             if cooperation == '品牌官方内容' and not evidence.strip():
                 raise ValueError('品牌官方账号需提供核验依据')
             if cooperation == '明确合作' and not evidence.strip():
@@ -205,13 +209,16 @@ def import_videos(db, items):
                        contact_source=str(item.get('contact_source', '')),
                        content_group=str(item.get('content_group', '')))
             row.update(extra)
+            row['classification_origin']=origin
             row['last_checked_at'] = observed
             old = db.execute('SELECT * FROM videos WHERE id=?', (vid,)).fetchone()
             # Refresh statistics/metadata without erasing manually reviewed decisions.
             if old:
+                protected = bool(old['reviewed_at']) or old['classification_origin']=='manual_import' or (not old['classification_origin'] and old['cooperation'] in {'明确合作','品牌官方内容','排除'})
+                if protected:row['classification_origin']=old['classification_origin']
                 for field in ('cooperation', 'evidence', 'format', 'market', 'language', 'contact',
                               'contact_source', 'creator_type', 'content_group','summary_zh','market_evidence','language_evidence','materials','evidence_source'):
-                    if old['reviewed_at'] or field not in item:
+                    if (protected if field in {'cooperation','evidence'} else bool(old['reviewed_at']) or field not in item):
                         row[field] = old[field]
             fields = list(row)
             updates = ','.join(f'{k}=excluded.{k}' for k in fields if k not in {'id', 'discovered_at'})

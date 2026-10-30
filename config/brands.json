@@ -89,5 +89,6 @@
     "age_days": 7,
     "tolerance_hours": 24
   },
-  "schedule_timezone": "Asia/Shanghai"
+  "schedule_timezone": "Asia/Shanghai",
+  "minimum_views": 1000
 }

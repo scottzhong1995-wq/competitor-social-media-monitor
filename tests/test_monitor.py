@@ -59,7 +59,7 @@ class MonitorTests(unittest.TestCase):
         self.assertIsNone(report(self.db)['videos'][0]['observed_growth'])
 
     def test_confirmed_cooperation_requires_evidence_and_us(self):
-        import_videos(self.db, [self.video(market='unknown')])
+        import_videos(self.db, [self.video(market='unknown',views=1000)])
         self.assertEqual(report(self.db)['summary']['confirmed_videos'], 0)
         with self.assertRaises(ValueError):
             review(self.db, dict(id='yt:abcdefghijk', cooperation='明确合作', evidence='', format='long'))
@@ -81,7 +81,8 @@ class MonitorTests(unittest.TestCase):
         r = report(self.db)
         self.assertIsNone(r['summary']['known_views'])
         self.assertEqual(r['summary']['measured_videos'], 0)
-        self.assertIsNone(r['breakdown'][0]['views'])
+        self.assertEqual(r['breakdown'],[])
+        self.assertFalse(r['videos'][0]['statistics_eligible'])
 
     def test_negative_growth_is_flagged(self):
         import_videos(self.db, [self.video()])
@@ -144,9 +145,9 @@ class MonitorTests(unittest.TestCase):
             import_trends(self.db, header+f'c,Yozma,{first},101,test,US,web')
 
     def test_excel_openable_with_literal_untrusted_titles(self):
-        import_videos(self.db, [self.video(title='=HYPERLINK("https://evil.invalid","Yozma IN-10")')])
+        import_videos(self.db, [self.video(title='=HYPERLINK("https://evil.invalid","Yozma IN-10")',views=1000)])
         wb = load_workbook(io.BytesIO(workbook(report(self.db))), data_only=False)
-        self.assertIn('爆款分析', wb.sheetnames)
+        self.assertIn('爆款视频', wb.sheetnames)
         cell = wb['本周发布视频']['B2']
         self.assertEqual(cell.data_type, 's')
         self.assertTrue(cell.value.startswith('='))

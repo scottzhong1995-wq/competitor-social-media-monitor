@@ -17,6 +17,7 @@ def load():
     value.setdefault('absolute_thresholds', {p: copy.deepcopy(value['viral_candidate_views']) for p in value['platforms']})
     value.setdefault('schedule_timezone', 'Asia/Shanghai')
     value.setdefault('youtube_max_pages', 2)
+    value.setdefault('minimum_views', 1000)
     return value
 
 
@@ -34,6 +35,10 @@ def save(value):
     ZoneInfo(value.get('schedule_timezone', 'Asia/Shanghai'))
     if not 7 <= int(value['history_days']) <= 3650:
         raise ValueError('历史天数应在7至3650之间')
+    minimum=value.get('minimum_views',1000)
+    if isinstance(minimum,bool) or not isinstance(minimum,int) or minimum<1000:
+        raise ValueError('minimum_views 必须为不低于1000的整数')
+    value['minimum_views']=minimum
     names = []
     for brand in value['brands']:
         names.append(brand['name'])

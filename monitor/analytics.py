@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from .core import stamp, week_bounds, identify
 from .settings import load
+from .commercial import signals, exclusion
 from .profiles import capabilities
 from .trends import read as read_trends
 
@@ -63,6 +64,10 @@ def build_report(db, week=None, **filters):
         v=dict(raw)
         if datetime.fromisoformat(v['published_at'])>=cutoff:
             continue
+        v['commercial_signals']=signals(v['title']+'\n'+v['description'])
+        if not v['reviewed_at'] and v['classification_origin']!='manual_import' and (v['classification_origin']=='auto' or v['cooperation'] in {'普通提及','线索待核实'}):
+            v['cooperation']='明确合作' if v['commercial_signals'] else '线索待核实'
+            v['evidence']='\n'.join(x['kind']+'：'+x['value']+'；'+x['context'] for x in v['commercial_signals']) or '未发现折扣码或联盟链接，待人工审核。'
         for k in ('brands','models','direction','keywords','materials'):
             v[k]=json.loads(v[k])
         snaps=[dict(s) for s in db.execute('SELECT * FROM snapshots WHERE video_id=? AND observed_at<? ORDER BY observed_at',(v['id'],cutoff.isoformat()))]
@@ -75,6 +80,10 @@ def build_report(db, week=None, **filters):
         growth=last['views']-base['views'] if inside and base and last and last['observed_at']!=base['observed_at'] else None
         v.update({k:latest.get(k) for k in ('views','likes','comments','followers','shares','observed_at')})
         v['metric_source']=latest.get('source')
+        v['statistics_exclusion']=exclusion(v['views'],config['minimum_views'])
+        v['statistics_eligible']=not v['statistics_exclusion']
+        previous_snaps=[s for s in snaps if s['observed_at']<start.isoformat()]
+        v['previous_views']=previous_snaps[-1]['views'] if previous_snaps else None
         v.update(observed_growth=growth, growth_from=base['observed_at'] if growth is not None else None,
                  growth_to=last['observed_at'] if growth is not None else None, metric_correction=growth is not None and growth<0,
                  new_in_week=start.isoformat()<=v['published_at']<end.isoformat(),
@@ -107,7 +116,7 @@ def build_report(db, week=None, **filters):
                  baseline_multiple=ratio, baseline_age_days=b['age_days'], baseline_confidence='同龄样本充分' if eligible else '样本不足/格式未知/缺少同龄快照',
                  high_views=v['views'] is not None and v['views']>=threshold,
                  relative_viral=ratio is not None and ratio>=b['multiple'], absolute_threshold=threshold)
-        v['viral_candidate']=v['high_views'] or v['relative_viral']
+        v['viral_candidate']=v['statistics_eligible'] and (v['high_views'] or v['relative_viral'])
         v['viral_reason']=('同账号同形式同龄中位数的 '+str(ratio)+' 倍；' if v['relative_viral'] else '')+(f'累计播放达到阈值 {threshold:,}；' if v['high_views'] else '')
         v['analysis_basis']=['标题','描述']+[k for k in v['materials']]
         v['action_suggestion']='研究标题中的“'+' / '.join(v['keywords'][:5])+'”表达，并人工核查原视频测试条件；尚不能判断转化。'
@@ -121,14 +130,15 @@ def build_report(db, week=None, **filters):
     statuses={'confirmed':{'明确合作'},'suspected':{'线索待核实'},'combined':{'明确合作','线索待核实'},'official':{'品牌官方内容'},'all':{'明确合作','线索待核实','普通提及','品牌官方内容'}}
     if scope not in statuses:
         raise ValueError('未知统计范围')
-    eligible=[v for v in videos if v['cooperation'] in statuses[scope] and (v['target_market'] or filters.get('include_other')=='1')]
+    scoped=[v for v in videos if v['cooperation'] in statuses[scope] and (v['target_market'] or filters.get('include_other')=='1')]
+    eligible=[v for v in scoped if v['statistics_eligible']]
     current=[v for v in eligible if v['new_in_week']]
-    previous=[v for v in eligible if previous_start.isoformat()<=v['published_at']<start.isoformat()]
+    previous=[v for v in scoped if not exclusion(v['previous_views'],config['minimum_views']) and previous_start.isoformat()<=v['published_at']<start.isoformat()]
     summary=aggregate(current)
     summary.update(confirmed_videos=sum(v['cooperation']=='明确合作' for v in current),confirmed_creators=len({(v['platform'],v['creator_id']) for v in current if v['cooperation']=='明确合作'}),
         known_views=summary['views'],measured_videos=summary['measured'],unique_content=len({v['content_group'] or v['id'] for v in current}),
-        pending=sum(v['new_in_week'] and v['cooperation']=='线索待核实' for v in videos),
-        official=sum(v['new_in_week'] and v['cooperation']=='品牌官方内容' for v in videos),
+        pending=sum(v['new_in_week'] and v['statistics_eligible'] and v['cooperation']=='线索待核实' for v in videos),
+        official=sum(v['new_in_week'] and v['statistics_eligible'] and v['cooperation']=='品牌官方内容' for v in videos),
         published=len(current),discovered=sum(v['discovered_in_week'] for v in eligible),updated=sum(v['updated_in_week'] for v in eligible),
         historical_growth=total([v['observed_growth'] for v in eligible if not v['new_in_week']]),
         all_growth=total([v['observed_growth'] for v in eligible]),previous_videos=len(previous),count_change=len(current)-len(previous),
@@ -151,22 +161,24 @@ def build_report(db, week=None, **filters):
     for raw in db.execute('SELECT * FROM creators'):
         c=json.loads(raw['profile']);c.update(platform=raw['platform'],account_id=raw['account_id'])
         rows=[v for v in all_rows if v['platform']==c['platform'] and v['creator_id']==c['account_id'] and not v['baseline_only']]
-        related=[v for v in rows if v['cooperation']=='明确合作']
+        related=[v for v in rows if v['statistics_eligible'] and v['cooperation']=='明确合作']
         if filters.get('platform') and c['platform']!=filters['platform']: continue
         if filters.get('brand') and not any(filters['brand'] in v['brands'] for v in rows): continue
         recent=sorted(rows,key=lambda v:v['observed_at'] or '',reverse=True)
         follower=next((v for v in recent if v['followers'] is not None),{})
-        c.update(followers=follower.get('followers'),observed_at=follower.get('observed_at'),videos=len(rows),confirmed=len(related),
+        c.update(followers=follower.get('followers'),observed_at=follower.get('observed_at'),videos=sum(v['statistics_eligible'] for v in rows),record_count=len(rows),confirmed=len(related),
           first_cooperation=min((v['discovered_at'] for v in related),default=None),last_cooperation=max((v['discovered_at'] for v in related),default=None),
           brands=sorted({b for v in related for b in v['brands']}),models=sorted({m for v in related for m in v['models']}),
           video_links=[v['url'] for v in related],viral_count=sum(v['viral_candidate'] for v in related),
           baseline_sample_count=recent[0]['baseline_sample_count'] if recent else 0,baseline_median=recent[0]['baseline_median'] if recent else None)
         for k in ('creator','creator_url','creator_type','contact','contact_source'): c.setdefault(k,'')
-        first_scope=min((v['discovered_at'] for v in rows if v['cooperation'] in statuses[scope] and (v['target_market'] or filters.get('include_other')=='1')),default=None)
+        first_scope=min((v['discovered_at'] for v in rows if v['statistics_eligible'] and v['cooperation'] in statuses[scope] and (v['target_market'] or filters.get('include_other')=='1')),default=None)
         if first_scope and start.isoformat()<=first_scope<end.isoformat(): first_count+=1
         if any(v in current for v in rows):
             merged.add('confirmed:'+c['identity_group'] if c.get('identity_group') and c.get('identity_evidence') else c['platform']+':'+c['account_id'])
         creators.append(c)
+    summary['excluded_low_views']=sum(v['views'] is not None and not v['statistics_eligible'] for v in videos)
+    summary['excluded_unknown_views']=sum(v['views'] is None for v in videos)
     summary['first_observed_creators']=first_count
     summary['cross_platform_creators']=len(merged)
     current_directions=distribution(current,'direction');previous_directions={r['name']:r['share'] for r in distribution(previous,'direction')}
@@ -174,7 +186,7 @@ def build_report(db, week=None, **filters):
     tz=ZoneInfo(filters.get('timezone') or config['report_timezone'])
     result = dict(week=start.astimezone(tz).date().isoformat(),end=(end.astimezone(tz).date()-timedelta(days=1)).isoformat(),
         timezone=str(tz),previous_week_start=previous_start.isoformat(),generated_at=stamp(),snapshot_cutoff=cutoff.isoformat(),complete=end<=now,filters=filters,scope=scope,
-        summary=summary,videos=videos,creators=creators,breakdown=breakdown,brand_breakdown=brand_breakdown,
+        summary=summary,minimum_views=config['minimum_views'],videos=videos,creators=creators,breakdown=breakdown,brand_breakdown=brand_breakdown,
         directions=current_directions,models=distribution(current,'models'),formats=distribution(current,'format'),keywords=distribution(current,'keywords'),
         trends=read_trends(db,start.astimezone(tz).date(),end.astimezone(tz).date()),rules=config['baseline'],thresholds=config['absolute_thresholds'],
         capabilities=capabilities(),coverage=dict(video_records=len(videos),youtube='已配置凭据；详见运行结果' if __import__('os').environ.get('YOUTUBE_API_KEY') else '未配置API key',instagram='仅导入',tiktok='仅导入',trends='CSV导入；相关查询未导入则不可用'),

@@ -31,7 +31,7 @@ class InsightTests(unittest.TestCase):
         self.assertEqual(r['viral_candidates'],[])
         self.assertIn('不能解读为竞品没有',r['insights']['overview']['conclusion'])
         self.assertIn('缺少',r['insights']['overview']['conclusion'])
-        self.assertIn('暂无达到',markdown(r))
+        self.assertIn('暂无达标',markdown(r))
 
     def test_high_views_does_not_invent_relative_multiple_or_materials(self):
         import_videos(self.db,[self.video()])
@@ -52,19 +52,20 @@ class InsightTests(unittest.TestCase):
         self.assertNotIn('TEST受众可能',' '.join(a['observations']))
         self.assertIn('TEST受众可能',' '.join(a['hypotheses']))
         doc=markdown(r)
-        self.assertIn('https://example.invalid/opening',doc)
-        self.assertIn('推测（待核验）',doc)
-        self.assertIn('封面：不可用',doc)
+        self.assertNotIn('https://example.invalid/opening',doc)
+        self.assertNotIn('推测（待核验）',doc)
+        self.assertNotIn('封面：不可用',doc)
 
     def test_shared_summary_and_viral_analysis_in_excel_and_report(self):
         import_videos(self.db,[self.video()])
         r=report(self.db);wb=load_workbook(io.BytesIO(workbook(r)))
-        rows=list(wb['模块分析与总结'].iter_rows(min_row=2,values_only=True))
-        self.assertEqual(rows[0][2],r['insights']['overview']['conclusion'])
-        self.assertIn(rows[0][2],markdown(r))
-        viral=list(wb['爆款深度分析'].iter_rows(min_row=2,values_only=True))[0]
-        self.assertEqual(viral[11],r['viral_candidates'][0]['analysis']['conclusion'])
-        self.assertIn(viral[11],markdown(r))
+        signals=[row[0] for row in wb['关键信号'].iter_rows(min_row=2,values_only=True)]
+        self.assertEqual(signals,r['weekly_signals'])
+        self.assertTrue(all(x in markdown(r) for x in signals))
+        headers=[c.value for c in wb['爆款视频'][1]]
+        self.assertEqual(headers,['视频','标题','数据','关键词','内容方向'])
+        self.assertNotIn('爆款深度分析',wb.sheetnames)
+        self.assertNotIn('各模块分析与总结',markdown(r))
 
     def test_current_filters_apply_to_analysis_and_search_trends(self):
         import_videos(self.db,[self.video(),self.video(url='https://youtu.be/insight0002',title='Tuttio Soleil01 review')])
@@ -78,18 +79,18 @@ class InsightTests(unittest.TestCase):
 
     def test_historical_candidate_and_ordinary_mention_are_labelled(self):
         import_videos(self.db,[self.video(published_at=(self.start-timedelta(days=10)).isoformat(),cooperation='普通提及')])
-        r=report(self.db);v=r['viral_candidates'][0]
+        r=report(self.db,scope='all');v=r['viral_candidates'][0]
         self.assertEqual(r['summary']['published'],0)
         self.assertEqual(v['analysis']['period'],'历史内容复查')
         self.assertIn('普通提及',' '.join(v['analysis']['facts']))
-        self.assertIn('不自动计入',markdown(r))
+        self.assertEqual(r['summary']['confirmed_videos'],0)
 
     def test_relative_candidate_has_same_age_evidence(self):
         pub=self.start-timedelta(days=10)
         for i in range(10):
             older=pub-timedelta(days=2*(i+1))
-            import_videos(self.db,[self.video(url=f'https://youtu.be/older{i:06d}',published_at=older.isoformat(),observed_at=(older+timedelta(days=7)).isoformat(),views=100,baseline_only=True)])
-        import_videos(self.db,[self.video(published_at=pub.isoformat(),observed_at=(pub+timedelta(days=7)).isoformat(),views=400)])
+            import_videos(self.db,[self.video(url=f'https://youtu.be/older{i:06d}',published_at=older.isoformat(),observed_at=(older+timedelta(days=7)).isoformat(),views=1000,baseline_only=True)])
+        import_videos(self.db,[self.video(published_at=pub.isoformat(),observed_at=(pub+timedelta(days=7)).isoformat(),views=4000)])
         a=report(self.db)['viral_candidates'][0]['analysis']
         self.assertEqual(a['kind'],'相对爆款候选')
         self.assertIn('基线 4 倍',' '.join(a['facts']))

@@ -64,28 +64,28 @@ def analyse_video(v):
         hypotheses=hypotheses,materials=materials,conclusion=conclusion,actions=actions,
         basis='规则归纳＋人工材料记录；系统未自动观看视频',
         limitations=['未取得的材料不分析；人工备注与系统直接读取指标分开。',
-                      '候选清单包含已收录非排除内容，逐条标注合作状态与市场；不自动计入已确认合作。',
+                      '候选遵循当前统计合作范围、市场和播放门槛；默认不含待审核或普通提及。',
                       '高播放不等于高转化，不推断订单、销售额、ROI或合作费用。'])
 
 
 def enrich(data):
     videos=data['videos'];s=data['summary']
-    selected=[v for v in videos if v['cooperation'] in SCOPE_STATUSES[data['scope']] and (v['target_market'] or data['filters'].get('include_other')=='1')]
+    selected=[v for v in videos if v['statistics_eligible'] and v['cooperation'] in SCOPE_STATUSES[data['scope']] and (v['target_market'] or data['filters'].get('include_other')=='1')]
     current=[v for v in selected if v['new_in_week']]
     references=[dict(label=v['title'],url=v['url']) for v in current[:5]]
-    scopes='按顶部周、品牌、平台、车型和形式筛选；页面内文本搜索仅缩小明细，不改变这些汇总。'
+    scopes=f"统计须播放量至少{data['minimum_views']:,}；低播放及未知播放保留在库但不计数。按顶部筛选；列表内搜索不改变汇总。"
     insights={}
     change=f"较上周 {s['previous_videos']} 条变化 {s['count_change']:+} 条；"+(f"环比 {s['count_change_percent']:+g}%。" if s['count_change_percent'] is not None else s['change_note']+'。')
     insights['overview']=panel('本周动态分析与总结',
         [f"选定统计范围本周发布 {s['published']} 条，涉及 {s['creators']} 个平台账号；{change}",
          f"同范围本周发现 {s['discovered']} 条、更新 {s['updated']} 条；疑似合作 {s['pending']} 条和官方内容 {s['official']} 条单独展示。"],
         '发布数量变化只描述已收录、已审核样本，不足以判断竞品投放预算或策略变化。' if current else '当前范围缺少本周发布样本，不能解读为竞品没有开展合作。',
-        ['优先审核合作证据、所在地与形式；将补录旧片保留为本周发现，不计新上线。'],
+        ['优先检查折扣码和联盟链接；两者都没有的先审核，再核对所在地与形式。'],
         [scopes,'疑似/官方计数来自视频列表，与选定合作汇总范围不同，不相加为确认合作。'],references)
     brands=Counter(b for v in current for b in v['brands']);models=Counter(m for v in current for m in v['models'])
     from .core import week_bounds
     start,_=week_bounds(data['week'],timezone_name=data['timezone'])
-    previous=[v for v in selected if data['previous_week_start']<=v['published_at']<start.isoformat()]
+    previous=[v for v in videos if v['previous_views'] is not None and v['previous_views']>=data['minimum_views'] and v['cooperation'] in SCOPE_STATUSES[data['scope']] and (v['target_market'] or data['filters'].get('include_other')=='1') and data['previous_week_start']<=v['published_at']<start.isoformat()]
     previous_brands=Counter(b for v in previous for b in v['brands'])
     contributions=[f"{brand} {brands[brand]-previous_brands[brand]:+} 条" for brand in sorted(set(brands)|set(previous_brands)) if brands[brand]!=previous_brands[brand]]
     if contributions:insights['overview']['facts'].append('已收录数量变化分布：'+'；'.join(contributions)+'。这是样本构成变化，不是投放策略的因果解释；多品牌视频可能重复进入品牌分布。')
@@ -121,9 +121,9 @@ def enrich(data):
         [f"视频列表收录 {len(videos)} 条非基线记录；其中本周发布 {sum(v['new_in_week'] for v in videos)}、本周发现 {sum(v['discovered_in_week'] for v in videos)}、本周更新 {sum(v['updated_in_week'] for v in videos)}，三个集合可重叠。",
          f"待核实商业线索 {len(pending)} 条，所在地未知 {unknown} 条，观察截止点数据过期 {sum(v['stale'] for v in videos)} 条。"],
         '视频列表包含各种合作状态，数量不能直接当作已确认合作量。',
-        ['先复核有披露、折扣码或联盟链接的记录，再核对国家与形式；对过期记录检查采集日志。'],
+        ['先复核折扣码和联盟链接；两者都没有的必须人工审核，对过期记录检查采集日志。'],
         [scopes,'本模块覆盖视频列表所有状态；选定合作指标见周度总览。'],[dict(label=v['title'],url=v['url']) for v in pending[:5]])
-    candidates=[v for v in videos if v['viral_candidate'] and v['cooperation']!='排除']
+    candidates=[v for v in selected if v['viral_candidate'] and v['cooperation']!='排除']
     candidates.sort(key=lambda v:(v['relative_viral'],v['baseline_multiple'] or 0,v['views'] or 0,v['id']),reverse=True)
     for v in candidates:v['analysis']=analyse_video(v)
     insights['viral']=panel('爆款候选分析与总结',
@@ -131,7 +131,7 @@ def enrich(data):
          f"其中本周新上线 {sum(v['new_in_week'] for v in candidates)} 条、历史内容 {sum(not v['new_in_week'] for v in candidates)} 条。"],
         '优先复核同龄基线充分的相对候选；绝对高播放不能替代相对异常判定。' if candidates else '暂无达到当前规则的已收录候选，覆盖不足时不能判断竞品没有爆款。',
         ['逐条查看合作证据、实际观察窗口和材料来源；将可验证选题和创作者机会纳入下周研究清单。'],
-        ['候选覆盖当前视频列表非排除内容，并不只限选定合作状态或目标市场；卡片会单独标明。'])
+        ['候选按当前合作范围、市场及播放门槛筛选；待审核需切换范围后单独查看。'])
     from .core import identify
     for field,index in [('brand',0),('model',1)]:
         if data['filters'].get(field):
@@ -161,4 +161,7 @@ def enrich(data):
         ['Instagram/TikTok与Google Trends自动接口未接通；数据量不足时保留限制说明。'])
     data['insights']=insights
     data['viral_candidates']=candidates
+    data['weekly_signals']=[f"合作发布 {s['published']} 条，{s['creators']} 个平台账号；较上周变化 {s['count_change']:+} 条。",
+        ('主要车型：'+'、'.join(f'{name} {count}条' for name,count in models.most_common(3))+'。') if models else '当前范围无达标的新上线车型数据。',
+        f"达标爆款候选 {len(candidates)} 条，其中本周发布 {sum(v['new_in_week'] for v in candidates)} 条，历史视频 {sum(not v['new_in_week'] for v in candidates)} 条。"]
     return data

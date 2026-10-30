@@ -24,7 +24,7 @@ class V2Tests(unittest.TestCase):
     def item(self, **kw):
         v=dict(platform='YouTube',url='https://youtu.be/target00001',title='Yozma IN-10 review',creator='test',creator_id='stable-id',
                published_at=(self.start+timedelta(hours=1)).isoformat(),observed_at=(self.start+timedelta(days=1)).isoformat(),
-               source='isolated test',format='long',market='US',language='en',cooperation='明确合作',evidence='paid disclosure',views=100)
+               source='isolated test',format='long',market='US',language='en',cooperation='明确合作',evidence='paid disclosure',views=1000)
         v.update(kw);return v
 
     def test_official_and_suspected_do_not_enter_default_cooperation(self):
@@ -84,7 +84,7 @@ class V2Tests(unittest.TestCase):
         wb=load_workbook(io.BytesIO(workbook(r)))
         exported={row[0]:row[1] for row in wb['周度汇总'].iter_rows(min_row=2,values_only=True)}
         self.assertEqual(exported['published'],r['summary']['published'])
-        self.assertEqual(exported['known_views'],100)
+        self.assertEqual(exported['known_views'],1000)
         self.assertIn('发布 1 条',markdown(r));self.assertEqual(len(r['videos']),1)
 
     def test_configurable_timezone_keywords_and_thresholds(self):

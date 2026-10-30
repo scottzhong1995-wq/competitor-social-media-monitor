@@ -3,7 +3,7 @@ import json
 
 def migrate(db):
     additions = {
-      'videos': {'creator_id':"TEXT NOT NULL DEFAULT ''", 'duration_seconds':'INTEGER',
+      'videos': {'creator_id':"TEXT NOT NULL DEFAULT ''", 'classification_origin':"TEXT NOT NULL DEFAULT ''", 'duration_seconds':'INTEGER',
         'summary_zh':"TEXT NOT NULL DEFAULT ''", 'market_evidence':"TEXT NOT NULL DEFAULT ''",
         'language_evidence':"TEXT NOT NULL DEFAULT ''", 'materials':"TEXT NOT NULL DEFAULT '{}'",
         'baseline_only':'INTEGER NOT NULL DEFAULT 0', 'availability':"TEXT NOT NULL DEFAULT 'active'",

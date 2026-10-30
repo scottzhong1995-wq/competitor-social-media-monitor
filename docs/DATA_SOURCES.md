@@ -12,7 +12,7 @@ YouTube参数和配额以Google控制台实际规则为准。当前初次回溯�
 
 导入沿用 `examples/videos.template.json`。新增字段：`creator_id`、`duration_seconds`、`shares`、`summary_zh`、`market_evidence`、`language_evidence`、`evidence_source`、`baseline_only`、`materials`。`baseline_only=true` 可收录无竞品词的创作者普通视频作为基线样本，默认不进入监控视频和合作数量；同一个账号ID和内容形式应保持一致。
 
-合作状态接受“已确认合作/明确合作”“疑似合作/线索待核实”“普通品牌提及/普通提及”“品牌官方内容”。“排除”保留作为人工排除状态。自动规则只提供线索，不自动确认合作；付费、赠品等需要人工核对原文的主体和否定语义。
+合作状态接受“已确认合作/明确合作”“疑似合作/线索待核实”“普通品牌提及/普通提及”“品牌官方内容”。“排除”保留作为人工排除状态。最新口径优先识别实际折扣码/联盟链接，归为商业关联合作（内部沿用“明确合作”字段，不表示已确认付款或赠品安排）；两类都没有的需审核。明确人工导入和审核结果保留。普通购买链接、UTM和否定的折扣码措辞不自动纳入。所有统计至少1000播放，未知值不计；基线样本仍保留，避免选择偏差。
 
 账号录入字段：`platform, account_id, creator, creator_url, market, market_evidence, language, language_evidence, creator_type, contact, contact_source, agency, agency_source, notes, followed, monitor, identity_group, identity_evidence`。跨平台合并只在 identity_group 和 identity_evidence 都有值时发生。账号即使没有视频或表现低也不删除。YouTube账号监控需真实 `UC...` ID，不能以显示名当频道ID。
 
