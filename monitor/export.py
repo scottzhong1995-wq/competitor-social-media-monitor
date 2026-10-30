@@ -73,6 +73,13 @@ def workbook(data):
     sheet('红人扩展档案', ['平台','ID','名称','国家','所在地依据','语言','身份组','身份依据','首次观察合作','最近观察合作','基线样本','中位播放','爆款数','关注','备注','经纪信息','经纪来源'],
           [[c.get(k) for k in ('platform','account_id','creator','market','market_evidence','language','identity_group','identity_evidence','first_cooperation','last_cooperation','baseline_sample_count','baseline_median','viral_count','followed','notes','agency','agency_source')] for c in data['creators']])
     sheet('内容方向变化', ['方向','数量','占比百分比','对上周变化百分点'],[[r[k] for k in ('name','count','share','share_change_pp')] for r in data['directions']])
+    sheet('模块分析与总结', ['模块','数据事实','分析与总结','Qronge行动（待验证）','限制','依据链接'],
+          [[v['title'],'\n'.join(v['facts']),v['conclusion'],'\n'.join(v['actions']),'\n'.join(v['limitations']),'\n'.join(e['label']+' '+e['url'] for e in v['evidence'])] for v in data['insights'].values()])
+    sheet('爆款深度分析', ['视频','原标题','候选类型','上线范围','合作状态','国家','语言','入选事实','内容观察','待核验推测','材料状态与来源','总结','Qronge行动','分析限制'],
+          [[v['url'],v['title'],v['analysis']['kind'],v['analysis']['period'],v['cooperation'],v['market'],v['language'],
+            '\n'.join(v['analysis']['facts']),'\n'.join(v['analysis']['observations']),'\n'.join(v['analysis']['hypotheses']) or '无附加推测',
+            '\n'.join(m['label']+'：'+m['status']+' '+m['note']+' '+m['source'] for m in v['analysis']['materials']),
+            v['analysis']['conclusion'],'\n'.join(v['analysis']['actions']),'\n'.join(v['analysis']['limitations'])] for v in data['viral_candidates']])
     stream = BytesIO()
     wb.save(stream)
     return stream.getvalue()
@@ -80,33 +87,41 @@ def workbook(data):
 
 def markdown(data):
     def value(v): return '不可用' if v is None else str(v)
+    def bullets(items): return ['- '+item for item in items]
     s=data['summary']
     lines=[f"# Qronge 竞品红人合作周报 · {data['week']} 至 {data['end']}",
-      f"数据标签：{data.get('data_label','真实收录记录，非全网统计')}。时区：{data['timezone']}；采集/生成：{data['generated_at']}；快照截止：{data['snapshot_cutoff']}。",
-      f"统计范围：{data['scope']}，过滤条件：{data['filters']}。完整周：{'是' if data['complete'] else '否'}。",
-      '## 本周变化',f"- 发布 {s['published']} 条；首次发现 {s['discovered']} 条；有新快照 {s['updated']} 条。历史补录不计新上线。",
-      f"- 确认合作 {s['confirmed_videos']} 条、{s['confirmed_creators']} 个平台账号；疑似 {s['pending']} 条；官方内容 {s['official']} 条。",
-      f"- 首次观察合作红人 {s['first_observed_creators']}；身份确认后的跨平台计数 {s['cross_platform_creators']}（其余账号独立计数）。",
-      f"- 与上周发布数量差 {s['count_change']:+}，{s['change_note']}。均值 {value(s['average_views'])}，中位数 {value(s['median_views'])}。",
-      f"- 已知累计播放 {value(s['known_views'])}，指标覆盖 {s['measured_videos']}/{s['published']}；历史内容观测区间增量 {value(s['historical_growth'])}。跨平台累计播放未去重受众。",
-      '## 品牌、车型与内容方向']
-    for r in data['brand_breakdown']:
-        lines.append(f"- {r['brand']} / {r['platform']} / {r['model']}：{r['videos']}条，{r['creators']}个账号，播放{value(r['views'])}。")
-    lines.append('多标签方向（占比可能超过100%）：'+str(data['directions']))
-    lines.append('标题真实关键词：'+str(data['keywords'][:20]))
-    lines.append('## 搜索趋势')
-    for t in data['trends']:
-        if t['week']!=data['week']: continue
-        lines.append(f"- {t['query']}：{t['value']}，上周{value(t['previous'])}，{t['change_label']}；{t['geo']}/{t['search_type']}，系列{t['series_id']}，[来源]({t['source']})。相关查询：{t['related'] or '不可用'}。")
-    if not data['trends']: lines.append('不可用：尚未导入可靠趋势数据。')
-    lines+=['指数为相对热度，跨归一化批次不相加；搜索变化与发布仅作观察线索，不作因果归因。','## 值得研究的视频与行动']
-    candidates=[v for v in data['videos'] if v['viral_candidate'] and v['cooperation']!='排除']
+      f"数据标签：{data.get('data_label','真实收录记录，非全网统计')}。时区：{data['timezone']}；生成时间：{data['generated_at']}；快照截止：{data['snapshot_cutoff']}。",
+      f"合作统计范围：{data['scope']}，过滤条件：{data['filters']}。完整周：{'是' if data['complete'] else '否'}。",
+      '## 本周关键指标',
+      f"- 发布 {s['published']} 条；本周首次发现 {s['discovered']} 条；有新快照 {s['updated']} 条。历史补录不计新上线。",
+      f"- 确认合作 {s['confirmed_videos']} 条、{s['confirmed_creators']} 个平台账号；疑似 {s['pending']} 条和官方 {s['official']} 条单列，不相加为确认合作。",
+      f"- 新上线内容已知累计播放 {value(s['known_views'])}；覆盖 {s['measured_videos']}/{s['published']}；历史内容观测窗口增量 {value(s['historical_growth'])}。跨平台播放未去重受众。",
+      '## 各模块分析与总结',
+      '以下为可追溯的规则分析与人工材料记录归纳，和看板、Excel共用同一结果；行动建议待验证，不代表已证实的传播原因。']
+    for insight in data['insights'].values():
+        lines += ['### '+insight['title'], '**数据事实**', *bullets(insight['facts']),
+                  '**分析与总结**：'+insight['conclusion'], '**Qronge行动建议（待验证）**', *bullets(insight['actions']),
+                  '**口径与限制**', *bullets(insight['limitations'])]
+        if insight['evidence']:
+            lines += ['**依据**']+[f"- [{e['label']}]({e['url']})" for e in insight['evidence']]
+    lines += ['## 爆款视频清单与逐条分析',
+      '本清单覆盖当前筛选视频列表中的非排除候选，含其他/未知市场及普通提及；合作状态逐条标明，不自动计入确认合作。高播放与相对账号爆款分别展示，历史视频不计本周新上线。']
+    candidates=data['viral_candidates']
+    lines.append(f"共 {len(candidates)} 条候选，正文展示前 {min(20,len(candidates))} 条；先按相对候选、基线倍数、播放量排序，完整清单及分析见Excel。")
     for v in candidates[:20]:
-        lines += [f"### [{v['title']}]({v['url']})",f"{v['platform']} / {v['creator']} / {'、'.join(v['models'])} / {v['published_at']}；播放{value(v['views'])}；{v['viral_reason']}",
-          f"同龄基线：{v['baseline_sample_count']}条；倍数{value(v['baseline_multiple'])}；{v['baseline_confidence']}。",
-          f"依据材料：{'、'.join(v['analysis_basis'])}。中文规则摘要：{v['summary_zh']}",str(v['materials']) if v['materials'] else '封面、开场、结构、场景和观众讨论点：不可用，尚未获取对应材料。',
-          f"建议（待验证）：{v['action_suggestion']}，可先核查该红人公开账号与受众是否适合Qronge；高播放不等于高转化。"]
-    if not candidates: lines.append('当前已收录数据中没有满足阈值的候选；不代表竞品不存在爆款。')
-    lines+=['## 合作证据与来源']+[f"- [{v['title']}]({v['url']})：{v['cooperation']}；{v['evidence'] or '未发现证据'}；[证据]({v['evidence_source']})" for v in data['videos'] if v['new_in_week']]
-    lines+=['## 数据限制']+['- '+item for item in data['limitations']]
+        a=v['analysis']
+        lines += [f"### [{v['title']}]({v['url']})",
+          f"**{a['period']} / {a['kind']}** · {'、'.join(v['brands'])} / {'、'.join(v['models']) or '车型未知'} · {v['platform']} / {v['content_form']} · {v['creator']}",
+          f"发布：{v['published_at']}；合作状态：{v['cooperation']}；国家/语言：{v['market']}/{v['language']}；[合作证据]({v['evidence_source']})：{v['evidence'] or '尚未确认'}。",
+          '**入选依据与表现**',*bullets(a['facts']),
+          '**内容观察**',*bullets(a['observations']),a['basis'],
+          '**封面、开场、测试场景、结构、观众讨论与字幕**']
+        for m in a['materials']:
+            lines.append(f"- {m['label']}：{m['status']}"+(f"；[{m['kind']}] {m['note']}；[材料来源]({m['source']})" if m['source'] else '。'))
+        lines += ['**推测（待核验）**',*bullets(a['hypotheses'] or ['无附加推测；未取得的材料不补写。']),
+                  '**分析与总结**：'+a['conclusion'], '**可供Qronge验证的选题与合作行动**',*bullets(a['actions']),
+                  '**判定限制**',*bullets(a['limitations'])]
+    if not candidates: lines.append('暂无达到当前规则的已收录候选；不代表竞品不存在爆款。')
+    lines+=['## 视频列表合作证据与来源（含不同合作状态）']+[f"- [{v['title']}]({v['url']})：{v['cooperation']}；{v['evidence'] or '未发现证据'}；[证据]({v['evidence_source']})" for v in data['videos'] if v['new_in_week']]
+    lines+=['## 数据限制']+bullets(data['limitations'])
     return '\n\n'.join(lines)+'\n'

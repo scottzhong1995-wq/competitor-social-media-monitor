@@ -54,6 +54,8 @@ def distribution(rows, key):
 def build_report(db, week=None, **filters):
     config=load()
     start,end=week_bounds(week,timezone_name=filters.get('timezone') or config['report_timezone'])
+    zone=ZoneInfo(filters.get('timezone') or config['report_timezone'])
+    previous_start,_=week_bounds((start.astimezone(zone).date()-timedelta(days=7)).isoformat(),timezone_name=str(zone))
     now=datetime.now(timezone.utc)
     cutoff=min(end,now)
     videos=[]; all_rows=[]
@@ -121,7 +123,7 @@ def build_report(db, week=None, **filters):
         raise ValueError('未知统计范围')
     eligible=[v for v in videos if v['cooperation'] in statuses[scope] and (v['target_market'] or filters.get('include_other')=='1')]
     current=[v for v in eligible if v['new_in_week']]
-    previous=[v for v in eligible if (start-timedelta(days=7)).isoformat()<=v['published_at']<start.isoformat()]
+    previous=[v for v in eligible if previous_start.isoformat()<=v['published_at']<start.isoformat()]
     summary=aggregate(current)
     summary.update(confirmed_videos=sum(v['cooperation']=='明确合作' for v in current),confirmed_creators=len({(v['platform'],v['creator_id']) for v in current if v['cooperation']=='明确合作'}),
         known_views=summary['views'],measured_videos=summary['measured'],unique_content=len({v['content_group'] or v['id'] for v in current}),
@@ -170,8 +172,8 @@ def build_report(db, week=None, **filters):
     current_directions=distribution(current,'direction');previous_directions={r['name']:r['share'] for r in distribution(previous,'direction')}
     for d in current_directions: d['share_change_pp']=round(d['share']-previous_directions.get(d['name'],0),2)
     tz=ZoneInfo(filters.get('timezone') or config['report_timezone'])
-    return dict(week=start.astimezone(tz).date().isoformat(),end=(end.astimezone(tz).date()-timedelta(days=1)).isoformat(),
-        timezone=str(tz),generated_at=stamp(),snapshot_cutoff=cutoff.isoformat(),complete=end<=now,filters=filters,scope=scope,
+    result = dict(week=start.astimezone(tz).date().isoformat(),end=(end.astimezone(tz).date()-timedelta(days=1)).isoformat(),
+        timezone=str(tz),previous_week_start=previous_start.isoformat(),generated_at=stamp(),snapshot_cutoff=cutoff.isoformat(),complete=end<=now,filters=filters,scope=scope,
         summary=summary,videos=videos,creators=creators,breakdown=breakdown,brand_breakdown=brand_breakdown,
         directions=current_directions,models=distribution(current,'models'),formats=distribution(current,'format'),keywords=distribution(current,'keywords'),
         trends=read_trends(db,start.astimezone(tz).date(),end.astimezone(tz).date()),rules=config['baseline'],thresholds=config['absolute_thresholds'],
@@ -180,3 +182,6 @@ def build_report(db, week=None, **filters):
         limitations=['播放量是曝光代理，跨平台未去重受众；不推算订单、销售额或ROI。','增长仅代表实际快照观察窗口，可能跨周界；不可冒充严格整周新增。',
           '未接通Instagram/TikTok自动发现、Google Trends自动接口；不代表全网合作总量。','历史周快照截至周末，后补数据不回填过去播放量；人工审核采用当前修正结果。',
           '内容多标签占比可能超过100%；未核实身份/内容不跨平台合并。','基线需另外收录同账号最近10–12条可比视频的同龄快照，不以当前累计量替代。'])
+
+    from .insights import enrich
+    return enrich(result)
