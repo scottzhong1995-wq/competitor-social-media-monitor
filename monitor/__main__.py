@@ -7,7 +7,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from .core import ROOT, connect, import_trends, import_videos, report
-from .export import workbook
+from .export import workbook, markdown
 from .locking import lock_scheduler
 
 
@@ -19,6 +19,7 @@ def export(db, week=None):
     temp = path.with_suffix('.tmp')
     temp.write_bytes(workbook(data))
     temp.replace(path)
+    path.with_suffix('.md').write_text(markdown(data),encoding='utf-8')
     return path
 
 
@@ -45,7 +46,7 @@ def _schedule_loop(zone, tz, state_file):
     print(f'调度器已启动：{zone} 每天02点采集，' + ('周一03点' if zone=='America/Los_Angeles' else '周二03点') + '出完整美国周报；不会调用模型或购买配额', flush=True)
     while True:
         now = datetime.now(tz)
-        state = json.loads(state_file.read_text()) if state_file.exists() else {}
+        state = json.loads(state_file.read_text(encoding='utf-8')) if state_file.exists() else {}
         if state.get('timezone') != zone:
             state = {'timezone': zone}
         today = now.date().isoformat()
@@ -75,6 +76,7 @@ def main():
     parser = argparse.ArgumentParser(description='美国英语竞品红人视频监控（无付费服务依赖）')
     sub = parser.add_subparsers(dest='cmd', required=True)
     sub.add_parser('init')
+    sub.add_parser('verify')
     web = sub.add_parser('serve'); web.add_argument('--port', type=int, default=8000)
     imp = sub.add_parser('import'); imp.add_argument('path')
     trend = sub.add_parser('trends'); trend.add_argument('path')
@@ -88,12 +90,15 @@ def main():
     if args.cmd == 'schedule':
         return schedule(args.timezone)
     with connect() as db:
-        if args.cmd == 'init':
+        if args.cmd == 'verify':
+            from .verify import verify
+            print(verify())
+        elif args.cmd == 'init':
             print('数据库已初始化；未填充虚构监控数据')
         elif args.cmd == 'import':
-            print('导入记录：', import_videos(db, json.loads(Path(args.path).read_text())))
+            print('导入记录：', import_videos(db, json.loads(Path(args.path).read_text(encoding='utf-8-sig'))))
         elif args.cmd == 'trends':
-            print('导入趋势：', import_trends(db, Path(args.path).read_text()))
+            print('导入趋势：', import_trends(db, Path(args.path).read_text(encoding='utf-8-sig')))
         elif args.cmd == 'export':
             print(export(db, args.week))
         elif args.cmd == 'collect':

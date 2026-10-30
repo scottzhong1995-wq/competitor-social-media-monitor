@@ -104,9 +104,11 @@ class MonitorTests(unittest.TestCase):
                 canonical('YouTube', url)
         self.assertEqual(canonical('TikTok', 'https://www.tiktok.com/@test/video/123456789')[0], 'tt:123456789')
 
-    def test_ninety_day_window(self):
+    def test_older_video_updated_this_week_retained_without_counting_new(self):
         import_videos(self.db, [self.video(published_at=(self.start-timedelta(days=100)).isoformat())])
-        self.assertEqual(report(self.db)['videos'], [])
+        self.assertEqual(len(report(self.db)['videos']), 1)
+        self.assertFalse(report(self.db)['videos'][0]['new_in_week'])
+        self.assertTrue(report(self.db)['videos'][0]['updated_in_week'])
 
     def test_la_week_boundaries_include_dst(self):
         start, end = week_bounds('2026-10-26')
@@ -144,7 +146,7 @@ class MonitorTests(unittest.TestCase):
     def test_excel_openable_with_literal_untrusted_titles(self):
         import_videos(self.db, [self.video(title='=HYPERLINK("https://evil.invalid","Yozma IN-10")')])
         wb = load_workbook(io.BytesIO(workbook(report(self.db))), data_only=False)
-        self.assertEqual(len(wb.sheetnames), 6)
+        self.assertIn('爆款分析', wb.sheetnames)
         cell = wb['本周发布视频']['B2']
         self.assertEqual(cell.data_type, 's')
         self.assertTrue(cell.value.startswith('='))

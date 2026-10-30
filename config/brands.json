@@ -8,19 +8,86 @@
       "name": "Yozma",
       "website": "https://yozmasport.com/",
       "models": [
-        {"name": "IN-10 Pro", "aliases": ["in-10 pro", "in 10 pro", "in10 pro", "in10pro"], "url": "https://yozmasport.com/products/in-10-pro"},
-        {"name": "IN-10", "aliases": ["in-10", "in 10", "in10"], "url": "https://yozmasport.com/products/in-10"}
+        {
+          "name": "IN-10 Pro",
+          "aliases": [
+            "in-10 pro",
+            "in 10 pro",
+            "in10 pro",
+            "in10pro"
+          ],
+          "url": "https://yozmasport.com/products/in-10-pro",
+          "verification_status": "用户提供产品URL；显示名及匹配拼写待官方核验"
+        },
+        {
+          "name": "IN-10",
+          "aliases": [
+            "in-10",
+            "in 10",
+            "in10"
+          ],
+          "url": "https://yozmasport.com/products/in-10",
+          "verification_status": "用户提供产品URL；显示名及匹配拼写待官方核验"
+        }
+      ],
+      "verification_status": "待官方核验：当前云环境未能连通官网；链接由用户提供",
+      "official_accounts": [],
+      "aliases": [
+        "yozmasport.com"
       ]
     },
     {
       "name": "Tuttio",
       "website": "https://tuttiosport.com/",
       "models": [
-        {"name": "Soleil01 GB Pro", "aliases": ["soleil01 gb pro", "soleil 01 gb pro", "soleil01-gb-pro", "gb pro"], "url": "https://tuttiosport.com/products/tuttio-soleil01-gb-pro-electric-dirt-bike"},
-        {"name": "Soleil01", "aliases": ["soleil01", "soleil 01", "soleil-01"], "url": "https://tuttiosport.com/products/tuttio-soleil01-electric-bike"}
+        {
+          "name": "Soleil01 GB Pro",
+          "aliases": [
+            "soleil01 gb pro",
+            "soleil 01 gb pro",
+            "soleil01-gb-pro",
+            "gb pro"
+          ],
+          "url": "https://tuttiosport.com/products/tuttio-soleil01-gb-pro-electric-dirt-bike",
+          "verification_status": "用户提供产品URL；显示名及匹配拼写待官方核验"
+        },
+        {
+          "name": "Soleil01",
+          "aliases": [
+            "soleil01",
+            "soleil 01",
+            "soleil-01"
+          ],
+          "url": "https://tuttiosport.com/products/tuttio-soleil01-electric-bike",
+          "verification_status": "用户提供产品URL；显示名及匹配拼写待官方核验"
+        }
+      ],
+      "verification_status": "待官方核验：当前云环境未能连通官网；链接由用户提供",
+      "official_accounts": [],
+      "aliases": [
+        "tuttiosport.com"
       ]
     }
   ],
-  "youtube_queries": ["Yozma", "Yozma IN-10", "Yozma IN-10 Pro", "Tuttio", "Tuttio Soleil01", "Tuttio Soleil01 GB Pro"],
-  "viral_candidate_views": {"long": 50000, "short": 100000, "unknown": 100000}
+  "youtube_queries": [
+    "Yozma",
+    "Yozma IN-10",
+    "Yozma IN-10 Pro",
+    "Tuttio",
+    "Tuttio Soleil01",
+    "Tuttio Soleil01 GB Pro"
+  ],
+  "viral_candidate_views": {
+    "long": 50000,
+    "short": 100000,
+    "unknown": 100000
+  },
+  "baseline": {
+    "size": 12,
+    "minimum": 10,
+    "multiple": 3,
+    "age_days": 7,
+    "tolerance_hours": 24
+  },
+  "schedule_timezone": "Asia/Shanghai"
 }

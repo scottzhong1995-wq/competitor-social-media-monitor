@@ -4,7 +4,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 from .core import ROOT, CONFIG, connect, import_trends, import_videos, report, review
-from .export import workbook
+from .export import workbook, markdown
+from .settings import load as settings, save as save_settings
+from .profiles import upsert_account
 
 
 def serve(host='127.0.0.1', port=8000):
@@ -36,16 +38,19 @@ def serve(host='127.0.0.1', port=8000):
                 kind = {'index.html':'text/html; charset=utf-8', 'app.js':'text/javascript; charset=utf-8', 'style.css':'text/css; charset=utf-8'}[filename]
                 return self.reply(200, (ROOT/'monitor/static'/filename).read_bytes(), kind)
             if parsed.path == '/api/config':
-                return self.reply(200, dict(config=CONFIG, csrf=token))
+                return self.reply(200, dict(config=settings(), csrf=token))
             if parsed.path == '/health':
                 with connect() as db:
                     db.execute('SELECT 1').fetchone()
                 return self.reply(200, {'status': 'ok'})
-            if parsed.path not in ('/api/report', '/api/export'):
+            if parsed.path not in ('/api/report', '/api/export', '/api/weekly'):
                 return self.reply(404, {'error': '不存在'})
             try:
                 with connect() as db:
-                    data = report(db, parse_qs(parsed.query).get('week', [None])[0])
+                    args={k:v[0] for k,v in parse_qs(parsed.query).items()}
+                    data = report(db, args.pop('week',None), **args)
+                if parsed.path == '/api/weekly':
+                    return self.reply(200, markdown(data), 'text/markdown; charset=utf-8', {'Content-Disposition':f'attachment; filename=weekly-{data["week"]}.md'})
                 if parsed.path == '/api/export':
                     return self.reply(200, workbook(data), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                                       {'Content-Disposition': f'attachment; filename="weekly-{data["week"]}.xlsx"'})
@@ -58,7 +63,7 @@ def serve(host='127.0.0.1', port=8000):
                 return self.reply(403, {'error': '仅允许本机访问'})
             if not secrets.compare_digest(self.headers.get('X-Monitor-Token', ''), token):
                 return self.reply(403, {'error': '请从本地看板提交操作'})
-            if self.path not in ('/api/import', '/api/trends', '/api/review'):
+            if self.path not in ('/api/import', '/api/trends', '/api/review','/api/config','/api/account','/api/related'):
                 return self.reply(404, {'error': '不存在'})
             try:
                 size = int(self.headers.get('Content-Length', '0'))
@@ -70,6 +75,20 @@ def serve(host='127.0.0.1', port=8000):
                         result = {'imported': import_videos(db, json.loads(body))}
                     elif self.path == '/api/trends':
                         result = {'imported': import_trends(db, body)}
+                    elif self.path == '/api/config':
+                        result={'config':save_settings(json.loads(body))}
+                    elif self.path == '/api/account':
+                        with db:
+                            result=upsert_account(db,json.loads(body))
+                    elif self.path == '/api/related':
+                        items=json.loads(body)
+                        with db:
+                            for r in items:
+                                if r['kind'] not in {'top','rising'} or not r.get('source'):
+                                    raise ValueError('相关查询需 kind=top/rising 和来源')
+                                from .core import stamp
+                                db.execute('INSERT INTO related_queries VALUES (?,?,?,?,?,?,?)',(r['series_id'],r['query'],r['kind'],r['term'],str(r.get('value','')),r['source'],stamp()))
+                        result={'imported':len(items)}
                     else:
                         review(db, json.loads(body))
                         result = {'reviewed': True}

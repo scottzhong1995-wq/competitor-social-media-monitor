@@ -1,0 +1,38 @@
+[
+  {
+    "brand": "Yozma",
+    "url": "https://yozmasport.com/",
+    "checked_at": "2026-10-30T01:51:57.500917+00:00",
+    "status": "不可用：官网请求未连通/被限制；未核验名称、拼写或账号"
+  },
+  {
+    "brand": "Yozma",
+    "url": "https://yozmasport.com/products/in-10-pro",
+    "checked_at": "2026-10-30T01:51:57.516026+00:00",
+    "status": "不可用：官网请求未连通/被限制；未核验名称、拼写或账号"
+  },
+  {
+    "brand": "Yozma",
+    "url": "https://yozmasport.com/products/in-10",
+    "checked_at": "2026-10-30T01:51:57.520347+00:00",
+    "status": "不可用：官网请求未连通/被限制；未核验名称、拼写或账号"
+  },
+  {
+    "brand": "Tuttio",
+    "url": "https://tuttiosport.com/",
+    "checked_at": "2026-10-30T01:51:57.524930+00:00",
+    "status": "不可用：官网请求未连通/被限制；未核验名称、拼写或账号"
+  },
+  {
+    "brand": "Tuttio",
+    "url": "https://tuttiosport.com/products/tuttio-soleil01-gb-pro-electric-dirt-bike",
+    "checked_at": "2026-10-30T01:51:57.528791+00:00",
+    "status": "不可用：官网请求未连通/被限制；未核验名称、拼写或账号"
+  },
+  {
+    "brand": "Tuttio",
+    "url": "https://tuttiosport.com/products/tuttio-soleil01-electric-bike",
+    "checked_at": "2026-10-30T01:51:57.532280+00:00",
+    "status": "不可用：官网请求未连通/被限制；未核验名称、拼写或账号"
+  }
+]

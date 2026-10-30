@@ -1,0 +1,17 @@
+[Unit]
+Description=Qronge competitor video monitor (Beijing night schedule)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qronge
+WorkingDirectory=/opt/qronge-monitor
+EnvironmentFile=/etc/qronge-monitor.env
+ExecStart=/opt/qronge-monitor/.venv/bin/python -u -m monitor schedule --timezone Asia/Shanghai
+Restart=on-failure
+RestartSec=30
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

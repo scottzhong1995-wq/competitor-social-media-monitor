@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "checks": [
+    "search",
+    "video statistics",
+    "channel statistics",
+    "isolated import",
+    "xlsx",
+    "markdown"
+  ],
+  "video_url": "https://www.youtube.com/watch?v=0UGzmncfQLI",
+  "captured_at": "2026-10-30T01:54:12.615037+00:00",
+  "records": 1,
+  "production_database_changed": false
+}
