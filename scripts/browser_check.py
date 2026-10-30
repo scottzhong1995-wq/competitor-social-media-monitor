@@ -46,7 +46,7 @@ def main():
     assert d.value.suggested_filename.endswith('.xlsx')
     with page.expect_download() as d:page.click('#weekly')
     assert d.value.suggested_filename.endswith('.md')
-    page.click('[data-tab=sources]');settings=json.loads(page.locator('#config-editor').input_value());settings['baseline']['multiple']=4
+    page.click('[data-tab=sources]');page.locator('.config-details > summary').click();settings=json.loads(page.locator('#config-editor').input_value());settings['baseline']['multiple']=4
     page.fill('#config-editor',json.dumps(settings));page.click('#save-config');expect(page.locator('#toast')).to_contain_text('配置已保存')
     page.set_viewport_size({'width':390,'height':844});page.click('[data-tab=overview]')
     assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')

@@ -1,0 +1,218 @@
+[
+  {
+    "viewport": "1366x768",
+    "tab": "overview",
+    "height": 1201,
+    "top": 431,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 493,
+        "container": 493,
+        "rowHeight": 44,
+        "smallFont": null
+      },
+      {
+        "width": 493,
+        "container": 493,
+        "rowHeight": 44,
+        "smallFont": null
+      },
+      {
+        "width": 1048,
+        "container": 1048,
+        "rowHeight": 44,
+        "smallFont": null
+      }
+    ],
+    "insightHeight": 516
+  },
+  {
+    "viewport": "1366x768",
+    "tab": "videos",
+    "height": 693,
+    "top": 431,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 1048,
+        "container": 1048,
+        "rowHeight": 122,
+        "smallFont": "12px"
+      }
+    ],
+    "insightHeight": 148
+  },
+  {
+    "viewport": "1366x768",
+    "tab": "viral-tab",
+    "height": 791,
+    "top": 431,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 1048,
+        "container": 1048,
+        "rowHeight": 44,
+        "smallFont": null
+      }
+    ],
+    "insightHeight": 148
+  },
+  {
+    "viewport": "1366x768",
+    "tab": "trends",
+    "height": 1615,
+    "top": 431,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 1048,
+        "container": 1048,
+        "rowHeight": 106,
+        "smallFont": "12px"
+      }
+    ],
+    "insightHeight": 106
+  },
+  {
+    "viewport": "1366x768",
+    "tab": "creators",
+    "height": 553,
+    "top": 431,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 1048,
+        "container": 1048,
+        "rowHeight": 113,
+        "smallFont": "12px"
+      }
+    ],
+    "insightHeight": 148
+  },
+  {
+    "viewport": "1366x768",
+    "tab": "sources",
+    "height": 1545,
+    "top": 431,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 1048,
+        "container": 1048,
+        "rowHeight": 85,
+        "smallFont": "12px"
+      }
+    ],
+    "insightHeight": 148
+  },
+  {
+    "viewport": "390x844",
+    "tab": "overview",
+    "height": 1698,
+    "top": 523,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 540,
+        "container": 328,
+        "rowHeight": 44,
+        "smallFont": null
+      },
+      {
+        "width": 328,
+        "container": 328,
+        "rowHeight": 44,
+        "smallFont": null
+      },
+      {
+        "width": 540,
+        "container": 328,
+        "rowHeight": 44,
+        "smallFont": null
+      }
+    ],
+    "insightHeight": 549
+  },
+  {
+    "viewport": "390x844",
+    "tab": "videos",
+    "height": 793,
+    "top": 480,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 688,
+        "container": 328,
+        "rowHeight": 122,
+        "smallFont": "12px"
+      }
+    ],
+    "insightHeight": 157
+  },
+  {
+    "viewport": "390x844",
+    "tab": "viral-tab",
+    "height": 814,
+    "top": 480,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 328,
+        "container": 328,
+        "rowHeight": 44,
+        "smallFont": null
+      }
+    ],
+    "insightHeight": 157
+  },
+  {
+    "viewport": "390x844",
+    "tab": "trends",
+    "height": 1678,
+    "top": 480,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 840,
+        "container": 328,
+        "rowHeight": 106,
+        "smallFont": "12px"
+      }
+    ],
+    "insightHeight": 123
+  },
+  {
+    "viewport": "390x844",
+    "tab": "creators",
+    "height": 548,
+    "top": 480,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 850,
+        "container": 328,
+        "rowHeight": 113,
+        "smallFont": "12px"
+      }
+    ],
+    "insightHeight": 157
+  },
+  {
+    "viewport": "390x844",
+    "tab": "sources",
+    "height": 1827,
+    "top": 480,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 800,
+        "container": 328,
+        "rowHeight": 87,
+        "smallFont": "12px"
+      }
+    ],
+    "insightHeight": 157
+  }
+]

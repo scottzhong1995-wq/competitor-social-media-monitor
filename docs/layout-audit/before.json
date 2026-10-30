@@ -1,0 +1,190 @@
+[
+  {
+    "viewport": "1366x768",
+    "tab": "overview",
+    "height": 2029,
+    "top": 366,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 461,
+        "container": 461,
+        "rowHeight": 45,
+        "smallFont": null
+      },
+      {
+        "width": 461,
+        "container": 461,
+        "rowHeight": 45,
+        "smallFont": null
+      },
+      {
+        "width": 992,
+        "container": 992,
+        "rowHeight": 45,
+        "smallFont": null
+      }
+    ],
+    "insightHeight": 1373
+  },
+  {
+    "viewport": "1366x768",
+    "tab": "videos",
+    "height": 967,
+    "top": 366,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 992,
+        "container": 992,
+        "rowHeight": 144,
+        "smallFont": "10px"
+      }
+    ],
+    "insightHeight": 343
+  },
+  {
+    "viewport": "1366x768",
+    "tab": "viral-tab",
+    "height": 2710,
+    "top": 366,
+    "bodyOverflow": false,
+    "tables": [],
+    "insightHeight": 343
+  },
+  {
+    "viewport": "1366x768",
+    "tab": "trends",
+    "height": 517,
+    "top": 366,
+    "bodyOverflow": false,
+    "tables": [],
+    "insightHeight": 293
+  },
+  {
+    "viewport": "1366x768",
+    "tab": "creators",
+    "height": 731,
+    "top": 366,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 992,
+        "container": 992,
+        "rowHeight": 106,
+        "smallFont": "10px"
+      }
+    ],
+    "insightHeight": 343
+  },
+  {
+    "viewport": "1366x768",
+    "tab": "sources",
+    "height": 2251,
+    "top": 366,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 992,
+        "container": 992,
+        "rowHeight": 65,
+        "smallFont": "10px"
+      }
+    ],
+    "insightHeight": 343
+  },
+  {
+    "viewport": "390x844",
+    "tab": "overview",
+    "height": 3370,
+    "top": 743,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 326,
+        "container": 326,
+        "rowHeight": 65,
+        "smallFont": null
+      },
+      {
+        "width": 326,
+        "container": 326,
+        "rowHeight": 45,
+        "smallFont": null
+      },
+      {
+        "width": 326,
+        "container": 326,
+        "rowHeight": 65,
+        "smallFont": null
+      }
+    ],
+    "insightHeight": 1859
+  },
+  {
+    "viewport": "390x844",
+    "tab": "videos",
+    "height": 1757,
+    "top": 703,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 663,
+        "container": 326,
+        "rowHeight": 315,
+        "smallFont": "10px"
+      }
+    ],
+    "insightHeight": 454
+  },
+  {
+    "viewport": "390x844",
+    "tab": "viral-tab",
+    "height": 4229,
+    "top": 703,
+    "bodyOverflow": false,
+    "tables": [],
+    "insightHeight": 454
+  },
+  {
+    "viewport": "390x844",
+    "tab": "trends",
+    "height": 645,
+    "top": 703,
+    "bodyOverflow": false,
+    "tables": [],
+    "insightHeight": 395
+  },
+  {
+    "viewport": "390x844",
+    "tab": "creators",
+    "height": 1278,
+    "top": 703,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 412,
+        "container": 326,
+        "rowHeight": 286,
+        "smallFont": "10px"
+      }
+    ],
+    "insightHeight": 531
+  },
+  {
+    "viewport": "390x844",
+    "tab": "sources",
+    "height": 3112,
+    "top": 703,
+    "bodyOverflow": false,
+    "tables": [
+      {
+        "width": 326,
+        "container": 326,
+        "rowHeight": 263,
+        "smallFont": "10px"
+      }
+    ],
+    "insightHeight": 478
+  }
+]
